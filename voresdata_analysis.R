@@ -21,8 +21,15 @@ glimpse(voresdata)
 #' Correcting the time paramete, and converting it to seconds
 voresdata_corrected <- voresdata %>% 
   mutate(Tid_med_timer = paste0('00:', Tid)) %>% 
-  mutate(Tid_correct = Tid %>% luridate::ms()) %>% 
+  mutate(Tid_correct = Tid %>% lubridate::ms()) %>% 
   mutate(Tid_sekunder  = Tid_correct %>% 
            lubridate::period_to_seconds())
 
-voresdata_corrected
+#' Exporting imported and adjusted data. Run only once.
+# voresdata_corrected %>% 
+#   write_excel_csv2('voresdata_konferteret')
+#' 
+#' 
+#' 
+#' 
+

@@ -1,7 +1,7 @@
 #' ---
 #' title: "Analyse af data fra Mehdi, Thang, og andre. "
 #' author: "Mossa M. Reimert "
-#' date: \\today
+#' date: \today
 #' ---
 
 library(tidyverse)
