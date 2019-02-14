@@ -46,18 +46,23 @@ plak_data_long <-
   ) %>% 
   
   mutate(brugte_min_dag1 = brugte_min_dag1 %>% period_to_seconds(),
-         brugte_min_dag2 = brugte_min_dag2 %>% period_to_seconds()) %>%  
+         brugte_min_dag2 = brugte_min_dag2 %>% period_to_seconds()) %>% 
+  
   
   gather(key, value, -deltager) %>% 
   
   separate(key, c('key', 'dag'), convert = TRUE, sep = '_dag') %>%
-
+  
   select(names(.) %>% sort(.)) %>% 
   force()
 
 plak_data_wide <- 
   plak_data_long %>%
   spread(key, value) %>%
+  
+  mutate(antal_flader = antal_taender * 6) %>% 
+  mutate(plak_by_r = antal_flader_med_plak / (antal_taender * 6)) %>% 
+  
   arrange(deltager) %>% 
   force()
 plak_data_wide
@@ -156,3 +161,30 @@ lme4::glmer(percent_plak ~ . - deltager - antal_taender + (1|deltager), family =
 
 
 GGally::ggcorr(plak_data_wide)
+
+# 
+# glm(cbind(antal_flader_med_plak, antal_taender) ~ 1 + brugte_min, 
+#     family = binomial,
+#     data = plak_data_wide)
+#     
+#     
+library(nlme)
+glmer_plak_data <- plak_data_wide %>% 
+  mutate(deltager = as.factor(deltager), 
+         dag = as.factor(dag))
+
+
+lme4::glmer(antal_flader_med_plak/antal_flader ~ 0 + brugte_min + dag + (1|deltager),
+# lme4::glmer(antal_flader_med_plak/antal_flader ~ 1 +  (1|deltager),
+# lme4::glmer(antal_flader_med_plak/antal_flader ~ 1 + dag * brugte_min + (brugte_min|deltager),
+            # lme4::glmer(antal_flader_med_plak/antal_flader ~  dag * brugte_min + (1|deltager),
+            # lme4::glmer(antal_flader_med_plak/antal_flader ~ brugte_min*dag + (brugte_min||deltager),
+            family = binomial,
+            # control = glmerControl(optimizer="bobyqa"),
+            data = glmer_plak_data) %T>% 
+  broom::tidy() %>%
+  # {plot(.) %>% print(.)} %>%
+  # {plot(., fitted(.) ~ antal_flader_med_plak/antal_flader) %>% print} %>%
+  print() %>% 
+  force
+
