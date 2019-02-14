@@ -10,6 +10,8 @@
 library(tidyverse)
 library(lme4)
 
+library(magrittr)
+
 knitr::opts_chunk$set(tidy = 'styler')
 
 knitr::opts_chunk$set(
@@ -61,7 +63,8 @@ voresdata_corrected <- voresdata %>%
 
 
 #+ warning = FALSE
-voresdata_corrected %>% {ggplot(.)  +
+plot_of_plak_data <- 
+  voresdata_corrected %>% {ggplot(.)  +
       
       aes(Tid_sekunder, plak, color = TP) + 
       
@@ -79,13 +82,65 @@ voresdata_corrected %>% {ggplot(.)  +
                   # inherit.aes = FALSE,
                   method.args = list(family = 'binomial'),
                   fullrange = FALSE) + 
-      labs(x = 'Plak i procent. ', 
-           y = 'Time [sec]') + 
+      labs(y = 'Plak i procent. ', 
+           x = 'Time [sec]') + 
       scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
       theme(legend.position = 'right', aspect.ratio = 1)
   }
+plot_of_plak_data
+
+
+plot_of_plak_data + 
+  aes(color = ID) + 
+  labs(color = 'Participant ID') + 
+  theme(legend.position = 'none')
+
+plak_behandling_plot <- voresdata_corrected %>% 
+  select(ID, plak, Tid_sekunder, TP) %>% { ggplot(.) +
+      
+      aes(y = plak, Tid_sekunder, color = TP) + 
+      
+      ggrepel::geom_text_repel(
+        aes(label = TP,
+            color = NULL),
+        alpha = .2,
+        show.legend = FALSE,
+
+      ) +
+      
+      geom_point(aes(color = ID),
+                 show.legend = FALSE) + 
+      geom_path(aes(group = ID, color = ID), show.legend = FALSE) + 
+      
+      # scale_x_log10() +
+      # scale_y_continuous(labels = scales::percent,
+      #                    trans = scales::logit_trans()) +
+      scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
+      
+      labs(y = 'Plak i procent. ', 
+           x = 'Time [sec]',
+           label = 'Treatment') + 
+      
+      theme(legend.position = 'right', 
+            # aspect.ratio = 1
+            ) +
+      NULL
+  }
+plak_behandling_plot 
+
+#+ fig.cap = 'The y-axis is transformed according to the logit-map, to clearly annotate the differences. '
+plak_behandling_plot +
+  scale_y_continuous(labels = scales::percent, limits = c(NA, .75),
+                     trans = scales::logit_trans())
+
 #'
 #'
 #'
 #'
+
+glmer_plak <- glmer(
+  plak ~ TP + Tid_sekunder + (Tid_sekunder|ID), 
+  data = voresdata_corrected,
+  family = binomial
+)
 
